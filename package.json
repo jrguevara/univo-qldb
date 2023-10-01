@@ -1,0 +1,37 @@
+{
+    "name": "univo-qldb",
+    "version": "1.0.0",
+    "description": "Proyecto serverless de QLDB en aws",
+    "main": "functions/createQldbTable.js",
+    "keywords": [
+        "serverless",
+        "aws",
+        "lambda",
+        "api gateway"
+    ],
+    "author": "Jaime Guevara",
+    "license": "MIT",
+    "devDependencies": {
+        "esbuild": "^0.19.3",
+        "serverless": "^3.35.2",
+        "serverless-esbuild": "^1.48.3",
+        "serverless-iam-roles-per-function": "^3.2.0"
+    },
+    "dependencies": {
+        "@aws-lambda-powertools/logger": "^1.13.1",
+        "@aws-lambda-powertools/metrics": "^1.13.1",
+        "@aws-lambda-powertools/tracer": "^1.13.1",
+        "@aws-sdk/client-qldb": "^3.418.0",
+        "@aws-sdk/node-http-handler": "^3.374.0",
+        "@aws-sdk/smithy-client": "^3.374.0",
+        "@middy/core": "^4.6.4",
+        "@middy/http-cors": "^4.6.4",
+        "amazon-qldb-driver-nodejs": "^3.0.1",
+        "aws-sdk": "^2.1463.0",
+        "cfn-response-promise": "^1.1.0",
+        "date-and-time": "^3.0.3",
+        "ion-js": "^4.3.0",
+        "jsbi": "^3.2.5",
+        "uuid": "^9.0.1"
+    }
+}

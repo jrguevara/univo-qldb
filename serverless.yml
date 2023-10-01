@@ -1,0 +1,128 @@
+service: univo-qldb
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  memorySize: 512
+  stage: ${opt:stage, 'dev'}
+  region: us-east-1
+  logRetentionInDays: 7
+  tracing:
+    apiGateway: true
+    lambda: true
+  environment:
+    LOG_LEVEL: INFO
+    POWERTOOLS_LOGGER_SAMPLE_RATE: 0.2
+    POWERTOOLS_METRICS_NAMESPACE: univo-qldb
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+    LEDGER_NAME:
+      Ref: qldbLedger
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - qldb:SendCommand
+          Resource:
+            - !Sub "arn:aws:qldb:${AWS::Region}:${AWS::AccountId}:ledger/univo-qldb-${self:provider.stage}"
+        - Effect: "Allow"
+          Action:
+            - "xray:PutTraceSegments"
+            - "xray:PutTelemetryRecords"
+          Resource: "*" # Restrict resource to minimum required
+
+plugins:
+  - serverless-iam-roles-per-function
+  - serverless-esbuild
+
+functions:
+  createSufragio:
+    name: crear-sufragio-${self:provider.stage}
+    handler: src/handlers/crearSufragio.handler
+    environment:
+      POWERTOOLS_SERVICE_NAME: qldb-crearSufragio
+    iamRoleStatementsInherit: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - qldb:PartiQLInsert
+          - qldb:PartiQLSelect
+          - qldb:PartiQLUpdate
+        Resource:
+          - !Sub "arn:aws:qldb:${AWS::Region}:${AWS::AccountId}:ledger/univo-qldb-${self:provider.stage}/table/*"
+    events:
+      - http:
+          path: /sufragios
+          method: GET
+          cors: true
+
+  createTable:
+    name: qldb-sufragios-table-${self:provider.stage}
+    handler: src/handlers/qldbTable.handler
+    iamRoleStatementsInherit: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - qldb:PartiQLCreateTable
+        Resource:
+          - !Sub "arn:aws:qldb:${AWS::Region}:${AWS::AccountId}:ledger/univo-qldb-${self:provider.stage}/*"
+    memorySize: 256
+    timeout: 6
+    environment:
+      TABLE_NAME: Sufragios
+
+  qldbIndex:
+    name: qldb-sufragios-index-${self:provider.stage}
+    handler: src/handlers/qldbIndex.handler
+    iamRoleStatementsInherit: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - qldb:PartiQLCreateIndex
+        Resource:
+          - !Sub "arn:aws:qldb:${AWS::Region}:${AWS::AccountId}:ledger/univo-qldb-${self:provider.stage}/*"
+    memorySize: 256
+    timeout: 6
+    environment:
+      TABLE_NAME: Sufragios
+      INDEX_NAME_1: sufragioId
+      INDEX_NAME_2: dui
+
+resources:
+  Resources:
+    qldbLedger:
+      Type: AWS::QLDB::Ledger
+      Properties:
+        Name: univo-qldb-${self:provider.stage}
+        DeletionProtection: false
+        PermissionsMode: STANDARD
+        Tags:
+          - Key: name
+            Value: univo-qldb
+
+    qldbTable:
+      Type: Custom::qldbTable
+      DependsOn: qldbLedger
+      Properties:
+        ServiceToken: !GetAtt CreateTableLambdaFunction.Arn
+        Version: 1.1 #change this to force redeploy
+
+    qldbIndex:
+      Type: Custom::qldbIndexes
+      DependsOn: qldbTable
+      Properties:
+        ServiceToken: !GetAtt QldbIndexLambdaFunction.Arn
+        Version: 1.1 #change this to force redeploy
+
+  Outputs:
+    qldbLedger:
+      Value:
+        Ref: qldbLedger
+      Export:
+        Name: univo-qldb
+
+    qldbStage:
+      Value: ${self:provider.stage}
+      Export:
+        Name: univo-qldb-stage
