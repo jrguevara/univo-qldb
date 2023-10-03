@@ -22,6 +22,7 @@
         "@aws-lambda-powertools/metrics": "^1.13.1",
         "@aws-lambda-powertools/tracer": "^1.13.1",
         "@aws-sdk/client-qldb": "^3.418.0",
+        "@aws-sdk/client-qldb-session": "^3.421.0",
         "@aws-sdk/node-http-handler": "^3.374.0",
         "@aws-sdk/smithy-client": "^3.374.0",
         "@middy/core": "^4.6.4",
@@ -30,8 +31,10 @@
         "aws-sdk": "^2.1463.0",
         "cfn-response-promise": "^1.1.0",
         "date-and-time": "^3.0.3",
+        "install": "^0.13.0",
         "ion-js": "^4.3.0",
         "jsbi": "^3.2.5",
+        "npm": "^10.1.0",
         "uuid": "^9.0.1"
     }
 }
