@@ -54,7 +54,7 @@ functions:
     events:
       - http:
           path: /sufragios
-          method: post
+          method: POST
           cors: true
 
   verificarSufragio:
@@ -73,7 +73,7 @@ functions:
     events:
       - http:
           path: /verificar
-          method: put
+          method: PUT
           cors: true
 
   ejecutararSufragio:
@@ -92,7 +92,25 @@ functions:
     events:
       - http:
           path: /ejecutar
-          method: put
+          method: PUT
+          cors: true
+
+  historialSufragio:
+    name: historial-sufragio-${self:provider.stage}
+    handler: src/handlers/historialSufragio.handler
+    environment:
+      POWERTOOLS_SERVICE_NAME: qldb-historialSufragio
+    iamRoleStatementsInherit: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - qldb:PartiQLHistoryFunction
+        Resource:
+          - !Sub "arn:aws:qldb:${AWS::Region}:${AWS::AccountId}:ledger/univo-qldb-${self:provider.stage}/*"
+    events:
+      - http:
+          path: /historial/{sufragioId}
+          method: GET
           cors: true
 
   createTable:

@@ -97,8 +97,6 @@ const crearSufragio = async (logger, nombre, dui, centroVotacion, departamento, 
     return sufragio;
 };
 
-/************** UPDATE **************/
-
 /**
  * Funcion de ayuda para obtener la ultima revision del documento por el id del documento
  * @param txn El {@linkcode TransactionExecutor} para la ejecucion del lambda
@@ -145,7 +143,7 @@ const verificarSufragio = async (sufragioId, eventInfo) => {
         if (resultList.length === 0) {
             throw new sufragioError(400, 'Error de integridad de sufragio', `Registro de sufragio con el sufragioId ${sufragioId} no existe`);
         } else {
-            const newEstado = 2;
+            const newEstado = 1;
             await updateSufragio(txn, sufragioId, newEstado, eventInfo);
             sufragio = {
                 sufragioId,
@@ -187,9 +185,46 @@ const ejecutarSufragio = async (sufragioId, eventInfo) => {
     return sufragio;
 };
 
+/**
+ * Funcion de ayuda para obtener la ultima revision del documento por el id del documento
+ * @param txn El {@linkcode TransactionExecutor} para la ejecucion del lambda
+ * @param sufragioId El id del documento del que se recuperara la informacion
+ * @returns El resultado de la ejecucion del query
+ */
+async function getHistorialSufragioById(txn, sufragioId) {
+    console.log('En la funcion getHistorialSufragioById');
+    const query = 'SELECT * FROM history(Sufragios) WHERE metadata.id = ?';
+    return txn.execute(query, sufragioId);
+}
+
+/**
+ * Funcion de ayuda para recuperar el estado actual e historico de un registro de sufragio
+ * @param sufragioId El id del documento del que se recuperara la informacion
+ * @returns Documento JSON para devolver al cliente
+ */
+const historialSufragio = async (sufragioId) => {
+    console.log(`En funcion historialSufragio con sufragioId ${sufragioId}`);
+
+    let historial;
+    // Obtienes una instancia del driver de QLDB
+    const qldbDriver = await getQldbDriver();
+    await qldbDriver.executeLambda(async (txn) => {
+        //Se obtiene el registro actual del sufragio
+        const result = await getHistorialSufragioById(txn, sufragioId);
+        const historialArray = result.getResultList();
+        if (historialArray.length === 0) {
+            throw new sufragioError(400, 'Error de integridad de sufragio', `Registro de sufragio con el sufragioId ${sufragioId} no existe`);
+        } else {
+            historial = JSON.stringify(historialArray);
+        }
+    });
+    return historial;
+};
+
 
 module.exports = {
     crearSufragio,
     verificarSufragio,
     ejecutarSufragio,
+    historialSufragio,
 };
