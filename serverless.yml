@@ -57,6 +57,44 @@ functions:
           method: post
           cors: true
 
+  verificarSufragio:
+    name: verificar-sufragio-${self:provider.stage}
+    handler: src/handlers/verificarSufragio.handler
+    environment:
+      POWERTOOLS_SERVICE_NAME: qldb-verificarSufragio
+    iamRoleStatementsInherit: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - qldb:PartiQLSelect
+          - qldb:PartiQLUpdate
+        Resource:
+          - !Sub "arn:aws:qldb:${AWS::Region}:${AWS::AccountId}:ledger/univo-qldb-${self:provider.stage}/*"
+    events:
+      - http:
+          path: /verificar
+          method: put
+          cors: true
+
+  ejecutararSufragio:
+    name: ejecutar-sufragio-${self:provider.stage}
+    handler: src/handlers/ejecutarSufragio.handler
+    environment:
+      POWERTOOLS_SERVICE_NAME: qldb-ejecutarSufragio
+    iamRoleStatementsInherit: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - qldb:PartiQLSelect
+          - qldb:PartiQLUpdate
+        Resource:
+          - !Sub "arn:aws:qldb:${AWS::Region}:${AWS::AccountId}:ledger/univo-qldb-${self:provider.stage}/*"
+    events:
+      - http:
+          path: /ejecutar
+          method: put
+          cors: true
+
   createTable:
     name: qldb-sufragios-table-${self:provider.stage}
     handler: src/handlers/qldbTable.handler

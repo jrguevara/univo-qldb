@@ -50,7 +50,7 @@ async function crearSufragioDoc(txn, sufragioDoc) {
  * @param dui dui del votante.
  * @returns Resultado de la ejecucion del query
  */
-async function addGuid(txn, docId, dui) {
+async function addSufragioId(txn, docId, dui) {
     const statement = 'UPDATE Sufragios as b SET b.sufragioId = ? WHERE b.dui = ?';
     return txn.execute(statement, docId, dui);
 }
@@ -79,7 +79,7 @@ const crearSufragio = async (logger, nombre, dui, centroVotacion, departamento, 
             const docIdArray = result.getResultList();
             const docId = docIdArray[0].get('documentId').stringValue();
             // Actualiza el registro para agregar el ID del documento como el GUID en el payload
-            await addGuid(txn, docId, dui);
+            await addSufragioId(txn, docId, dui);
             sufragio = {
                 sufragioId: docId,
                 nombre,
@@ -97,6 +97,99 @@ const crearSufragio = async (logger, nombre, dui, centroVotacion, departamento, 
     return sufragio;
 };
 
+/************** UPDATE **************/
+
+/**
+ * Funcion de ayuda para obtener la ultima revision del documento por el id del documento
+ * @param txn El {@linkcode TransactionExecutor} para la ejecucion del lambda
+ * @param sufragioId El id del documento del que se recuperara la informacion
+ * @returns El resultado de la ejecucion del query
+ */
+async function getSufragioRecordById(txn, sufragioId) {
+    console.log('En funcion getSufragioRecordById');
+    const query = 'SELECT * FROM Sufragios AS b WHERE b.sufragioId = ?'
+    return txn.execute(query, sufragioId);
+}
+
+/**
+ * Funcion de ayuda para actualizar el Sufragio
+ * @param txn El {@linkcode TransactionExecutor} para la ejecucion del lambda
+ * @param sufragioId El id del documento a actualizar
+ * @param newEstado El nuevo estado del sufragio
+ * @param eventInfo El evento a agregar al documento
+ * @returns El resultado de la ejecucion del query
+ */
+async function updateSufragio(txn, sufragioId, newEstado, eventInfo) {
+    console.log(`En la actualizacion de estado de sufragioId ${sufragioId} y evento ${eventInfo}`);
+    const statement = 'UPDATE Sufragios SET estado = ?, events = ? WHERE sufragioId = ?';
+    return txn.execute(statement, newEstado, eventInfo, sufragioId);
+}
+
+/**
+ * Verifica el sufragio en mesa receptora cambiando estado/status a 1
+ * @param dui EL dui con el que se buscara el sufragio
+ * @param event El evento a agregar al documento
+ * @returns Documento JSON para devolver al cliente
+ */
+const verificarSufragio = async (sufragioId, eventInfo) => {
+    console.log(`En la funcion de ejecucion de sufragio ${sufragioId}, y eventInfo ${eventInfo}`);
+
+    let sufragio;
+    // Obtienes una instancia del driver de QLDB
+    const qldbDriver = await getQldbDriver();
+    await qldbDriver.executeLambda(async (txn) => {
+        //Se obtiene el registro actual del sufragio
+        const result = await getSufragioRecordById(txn, sufragioId);
+        const resultList = result.getResultList();
+
+        if (resultList.length === 0) {
+            throw new sufragioError(400, 'Error de integridad de sufragio', `Registro de sufragio con el sufragioId ${sufragioId} no existe`);
+        } else {
+            const newEstado = 2;
+            await updateSufragio(txn, sufragioId, newEstado, eventInfo);
+            sufragio = {
+                sufragioId,
+                estado: newEstado,
+            };
+        }
+    });
+    return sufragio;
+};
+
+/**
+ * Ejecucion del sufragio en cabina de votacion cambiando estado/status a 2
+ * @param dui EL dui con el que se buscara el sufragio
+ * @param event El evento a agregar al documento
+ * @returns Documento JSON para devolver al cliente
+ */
+const ejecutarSufragio = async (sufragioId, eventInfo) => {
+    console.log(`En la funcion de ejecutar el sufragio ${sufragioId}, y eventInfo ${eventInfo}`);
+
+    let sufragio;
+    // Obtienes una instancia del driver de QLDB
+    const qldbDriver = await getQldbDriver();
+    await qldbDriver.executeLambda(async (txn) => {
+        //Se obtiene el registro actual del sufragio
+        const result = await getSufragioRecordById(txn, sufragioId);
+        const resultList = result.getResultList();
+
+        if (resultList.length === 0) {
+            throw new sufragioError(400, 'Error de integridad de sufragio', `Registro de sufragio con el sufragioId ${sufragioId} no existe`);
+        } else {
+            const newEstado = 2;
+            await updateSufragio(txn, sufragioId, newEstado, eventInfo);
+            sufragio = {
+                sufragioId,
+                estado: newEstado,
+            };
+        }
+    });
+    return sufragio;
+};
+
+
 module.exports = {
     crearSufragio,
+    verificarSufragio,
+    ejecutarSufragio,
 };

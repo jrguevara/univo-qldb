@@ -1,0 +1,20 @@
+SELECT * FROM _ql_committed_Sufragios;
+SELECT * FROM history(Sufragios) AS c WHERE c.metadata.id = 'HVt8L2F8XYS40SyMz3ZBs7';
+
+{
+	"nombre" : "Jaime Guevara",
+	"dui" : "02140852-2",
+	"centroVotacion": 23,
+	"municipio" : 66,
+	"departamento": 12,
+    "sexo": "M"
+}
+
+{
+    "sufragioId": "HVt8L2F8XYS40SyMz3ZBs7"
+}
+
+{
+    "sufragioId": "HVt8L2F8XYS40SyMz3ZBs7",
+    "votoId": 2
+}

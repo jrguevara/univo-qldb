@@ -1,11 +1,12 @@
-/* Funcion lambda que implementa la funcionalidad de crear sufragio
- */
+/*
+Funcion lambda que implementa la funcionalidad de verificar sufragio en mesa receptora
+*/
 const { Logger, injectLambdaContext } = require('@aws-lambda-powertools/logger');
 const { Tracer, captureLambdaHandler } = require('@aws-lambda-powertools/tracer');
 const { Metrics, MetricUnits, logMetrics } = require('@aws-lambda-powertools/metrics');
 const middy = require('@middy/core');
 const date = require('date-and-time');
-const { crearSufragio } = require('./helper/sufragio');
+const { verificarSufragio } = require('./helper/sufragio');
 const sufragioError = require('./lib/sufragioError');
 const cors = require('@middy/http-cors');
 
@@ -16,27 +17,23 @@ const metrics = new Metrics();
 tracer.captureAWS(require('aws-sdk'));
 
 const handler = async (event) => {
-    const {
-        nombre, dui, centroVotacion, departamento, municipio, sexo,
-    } = JSON.parse(event.body);
-    const userId = 1;
-    logger.debug(`Creacion de sufragio con los datos: Nombre: ${nombre}, DUI: ${dui}, Centro de votacion: ${centroVotacion}, Departamento: ${departamento}, Municipio: ${municipio}, Sexo: ${sexo} y userId: ${userId}`);
-
+    const { sufragioId } = JSON.parse(event.body);
+    //const userId = 2;
+    logger.debug(`En el proceso de verificacion de sufragioId ${sufragioId}`);
+    let eventInfo;
     try {
-        const eventInfo = { eventName: 'ingresoCentroVotacion', status: 0, eventDate: date.format(new Date(), 'YYYY/MM/DD HH:mm:ss') };
-        const response = await crearSufragio(
-            logger, nombre, dui, centroVotacion, departamento, municipio, sexo, userId, eventInfo
-        );
-        metrics.addMetric('creacionSufragioExitoso', MetricUnits.Count, 1);
+        eventInfo = { eventName: 'verificacionMesaReceptora', status: 1, eventDate: date.format(new Date(), 'YYYY/MM/DD HH:mm:ss') };
+        const response = await verificarSufragio(sufragioId, eventInfo);
+        metrics.addMetric('verificarSufragioExitoso', MetricUnits.Count, 1);
         return {
-            statusCode: 201,
+            statusCode: 200,
             body: JSON.stringify(response),
         };
     } catch (error) {
         if (error instanceof sufragioError) {
             return error.getHttpResponse();
         }
-        metrics.addMetric('creacionSufragioFallido', MetricUnits.Count, 1);
+        metrics.addMetric('verificacionSufragioFallido', MetricUnits.Count, 1);
         logger.error(`Error regresado: ${error}`);
         const errorBody = {
             status: 500,
