@@ -1,4 +1,5 @@
 SELECT * FROM _ql_committed_Sufragios;
+UPDATE Sufragios SET estado = 1 WHERE sufragioId = 'HVt8L2F8XYS40SyMz3ZBs7';
 SELECT * FROM history(Sufragios) AS c WHERE c.metadata.id = 'HVt8L2F8XYS40SyMz3ZBs7';
 
 {
