@@ -76,7 +76,7 @@ functions:
           method: PUT
           cors: true
 
-  ejecutararSufragio:
+  ejecutarSufragio:
     name: ejecutar-sufragio-${self:provider.stage}
     handler: src/handlers/ejecutarSufragio.handler
     environment:

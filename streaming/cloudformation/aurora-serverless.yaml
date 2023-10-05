@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Aurora Serverless Cloudformation Template.
+Parameters: 
+  QLDBStreamRoleName:
+    Description: Name for QLDB stream IAM role
+    Type: String
+    MinLength: '1'
+    MaxLength: '64'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+    Default: QLDBStreamRole
+  DBUsername:
+    Description: Username for MySQL database access. Default - username
+    Type: String
+    MinLength: '1'
+    MaxLength: '16'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+    Default: username
+  DBPassword:
+    NoEcho: 'true'
+    Description: Password MySQL database access. Default - password
+    Type: String
+    MinLength: '6'
+    MaxLength: '41'
+    AllowedPattern: '[a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+    Default: password
+Resources:
+  RDSCluster: 
+    Properties: 
+      DBClusterParameterGroupName: 
+        Ref: RDSDBClusterParameterGroup
+      Engine: aurora-mysql
+      EngineMode: serverless
+      EngineVersion: 5.7.mysql_aurora.2.07.1
+      ScalingConfiguration:
+              AutoPause: false
+              MinCapacity: 16
+              MaxCapacity: 32
+      EnableHttpEndpoint: true
+      MasterUserPassword: 
+        Ref: DBPassword
+      MasterUsername: 
+        Ref: DBUsername
+    Type: "AWS::RDS::DBCluster"
+  RDSDBClusterParameterGroup: 
+    Properties: 
+      Description: "CloudFormation Sample Aurora Cluster Parameter Group"
+      Family: aurora-mysql5.7
+      Parameters: 
+        time_zone: US/Eastern
+        tx_isolation: SERIALIZABLE
+    Type: "AWS::RDS::DBClusterParameterGroup"
+  QLDBStreamRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: !Sub '${QLDBStreamRoleName}-${AWS::Region}'
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - qldb.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                - 'kinesis:PutRecord*'
+                - 'kinesis:DescribeStream'
+                - 'kinesis:ListShards'
+                Resource: '*'

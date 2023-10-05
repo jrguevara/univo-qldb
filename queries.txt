@@ -1,6 +1,6 @@
 SELECT * FROM _ql_committed_Sufragios;
-UPDATE Sufragios SET estado = 1 WHERE sufragioId = 'HVt8L2F8XYS40SyMz3ZBs7';
-SELECT * FROM history(Sufragios) AS c WHERE c.metadata.id = 'HVt8L2F8XYS40SyMz3ZBs7';
+UPDATE Sufragios SET estado = 1 WHERE sufragioId = 'CBrbzFfMB0YIHYKYgt7uho';
+SELECT * FROM history(Sufragios) AS c WHERE c.metadata.id = 'CBrbzFfMB0YIHYKYgt7uho';
 
 {
 	"nombre" : "Jaime Guevara",
@@ -12,10 +12,39 @@ SELECT * FROM history(Sufragios) AS c WHERE c.metadata.id = 'HVt8L2F8XYS40SyMz3Z
 }
 
 {
-    "sufragioId": "HVt8L2F8XYS40SyMz3ZBs7"
+    "sufragioId": "CBrbzFfMB0YIHYKYgt7uho"
 }
 
 {
-    "sufragioId": "HVt8L2F8XYS40SyMz3ZBs7",
+    "sufragioId": "CBrbzFfMB0YIHYKYgt7uho",
     "votoId": 2
 }
+
+
+create database sufragios;
+
+CREATE TABLE sufragios.sufragios
+  (
+     docId         	VARCHAR(22) NOT NULL,
+     docV          	INT NOT NULL,
+     sufragioId    	VARCHAR(22) NOT NULL,
+	 nombre        	VARCHAR(100) NOT NULL,
+     dui           	VARCHAR(10),
+     centroVotacion INT NOT NULL,
+	 departamento 	INT NOT NULL,
+	 municipio 		INT NOT NULL,
+     sexo 			ENUM('M', 'F'),
+     userId			INT NOT NULL DEFAULT 1,
+	 estado 		ENUM('0', '1', '2'),
+	 eventname     	ENUM('ingresoCentroVotacion', 'verificacionMesaReceptora', 'ejecutandoSufragio'),
+	 status 		ENUM('0', '1', '2'),
+	 votoId			INT NOT NULL DEFAULT 0,
+	 fecha	 		DATETIME NOT NULL DEFAULT NOW(),
+	 events			TEXT NOT NULL,
+     INDEX (docv),
+     INDEX (sufragioId),
+	 INDEX (status),
+     PRIMARY KEY (docid, docv)
+  );
+
+  show TABLES FROM sufragios;

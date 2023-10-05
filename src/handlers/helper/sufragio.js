@@ -72,7 +72,7 @@ const crearSufragio = async (logger, nombre, dui, centroVotacion, departamento, 
         const recordsReturned = await checkDuiUnique(logger, txn, dui);
         if (recordsReturned === 0) {
             const sufragioDoc = {
-                nombre, dui, centroVotacion, departamento, municipio, sexo, estado: 0, userId, events: event,
+                nombre, dui, centroVotacion, departamento, municipio, sexo, estado: 0, userId, eventname: 'ingresoCentroVotacion', status: 0, votoId: 0, events: event,
             };
             // Crea el registro. Esto devuelve el ID del documento unico en un array como el conjunto de resultados
             const result = await crearSufragioDoc(txn, sufragioDoc);
@@ -117,10 +117,10 @@ async function getSufragioRecordById(txn, sufragioId) {
  * @param eventInfo El evento a agregar al documento
  * @returns El resultado de la ejecucion del query
  */
-async function updateSufragio(txn, sufragioId, newEstado, eventInfo) {
+async function updateSufragio(txn, sufragioId, newEstado, eventname, status, votoId, eventInfo) {
     console.log(`En la actualizacion de estado de sufragioId ${sufragioId} y evento ${eventInfo}`);
-    const statement = 'UPDATE Sufragios SET estado = ?, events = ? WHERE sufragioId = ?';
-    return txn.execute(statement, newEstado, eventInfo, sufragioId);
+    const statement = 'UPDATE Sufragios SET estado = ?, eventname = ?, status = ?, votoId = ?, events = ? WHERE sufragioId = ?';
+    return txn.execute(statement, newEstado, eventname, status, votoId, eventInfo, sufragioId);
 }
 
 /**
@@ -144,7 +144,10 @@ const verificarSufragio = async (sufragioId, eventInfo) => {
             throw new sufragioError(400, 'Error de integridad de sufragio', `Registro de sufragio con el sufragioId ${sufragioId} no existe`);
         } else {
             const newEstado = 1;
-            await updateSufragio(txn, sufragioId, newEstado, eventInfo);
+            const newStatus = 1;
+            const eventname = 'verificacionMesaReceptora';
+            const votoId = 0;
+            await updateSufragio(txn, sufragioId, newEstado, eventname, newStatus, votoId, eventInfo);
             sufragio = {
                 sufragioId,
                 estado: newEstado,
@@ -160,7 +163,7 @@ const verificarSufragio = async (sufragioId, eventInfo) => {
  * @param event El evento a agregar al documento
  * @returns Documento JSON para devolver al cliente
  */
-const ejecutarSufragio = async (sufragioId, eventInfo) => {
+const ejecutarSufragio = async (sufragioId, eventInfo, votoId) => {
     console.log(`En la funcion de ejecutar el sufragio ${sufragioId}, y eventInfo ${eventInfo}`);
 
     let sufragio;
@@ -175,7 +178,9 @@ const ejecutarSufragio = async (sufragioId, eventInfo) => {
             throw new sufragioError(400, 'Error de integridad de sufragio', `Registro de sufragio con el sufragioId ${sufragioId} no existe`);
         } else {
             const newEstado = 2;
-            await updateSufragio(txn, sufragioId, newEstado, eventInfo);
+            const newStatus = 2;
+            const eventname = 'ejecutandoSufragio';
+            await updateSufragio(txn, sufragioId, newEstado, eventname, newStatus, votoId, eventInfo);
             sufragio = {
                 sufragioId,
                 estado: newEstado,

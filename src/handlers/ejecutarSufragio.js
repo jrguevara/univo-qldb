@@ -23,7 +23,7 @@ const handler = async (event) => {
     let eventInfo;
     try {
         eventInfo = { eventName: 'ejecutandoSufragio', status: 2, votoId: votoId, eventDate: date.format(new Date(), 'YYYY/MM/DD HH:mm:ss') };
-        const response = await ejecutarSufragio(sufragioId, eventInfo);
+        const response = await ejecutarSufragio(sufragioId, eventInfo, votoId);
         metrics.addMetric('ejecutarSufragioExitoso', MetricUnits.Count, 1);
         return {
             statusCode: 200,
