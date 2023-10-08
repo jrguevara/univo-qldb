@@ -22,7 +22,7 @@ import os
 from botocore.exceptions import ClientError
 import sys
 import logging
-import python.rds_config as rds_config
+import rds_config
 import pymysql
 from pyion2json import ion_to_json
 import json
@@ -36,8 +36,8 @@ schema = rds_config.schema
 
 REVISION_DETAILS_RECORD_TYPE = "REVISION_DETAILS"
 BLOCK_SUMMARY_RECORD_TYPE = "BLOCK_SUMMARY"
-PERSON_TABLENAME = "resultados"
-VEHICLE_REGISTRATION_TABLENAME = "resultados"
+PERSON_TABLENAME = "Person"
+VEHICLE_REGISTRATION_TABLENAME = "VehicleRegistration"
 
 RETRYABLE_ERRORS = ['ThrottlingException', 'ServiceUnavailable', 'RequestExpired']
 
@@ -247,8 +247,8 @@ def get_data_metdata_from_revision_record(revision_record):
     """
     Retrieves the data block from revision Revision Record
     Parameters:
-    topic_arn (string): The topic you want to publish to.
-    message (string): The message you want to send.
+       topic_arn (string): The topic you want to publish to.
+       message (string): The message you want to send.
     """
 
     revision_data = None
